@@ -1,20 +1,34 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState, useRef } from "react";
 import '../css/style.css';
+import _ from 'lodash';
+const URL = 'https://api.openweathermap.org/data/2.5/weather?q=%s&units=metric&appid=8a2a5d308223fc6eaa8944c411e8b55c';
 
 const TempApp = () => {
 
-    const [city, setCity] = useState(null);
+    const [city, setCity] = useState(' ');
     const [search, setSearch] = useState("Mumbai");
+    const inputRef = useRef();
 
     useEffect(() => {
+        handleSearchText(search);
+        inputRef.current = _.debounce(handleSearchText, 500);
+    }, []);
+
+    const handleSearchText = (serachValue) => {
         const fetchApi = async () => {
-            const url = `http://api.openweathermap.org/data/2.5/weather?q=${search}&units=metric&appid=8a2a5d308223fc6eaa8944c411e8b55c`;
+            const url = URL.replace('%s', serachValue);
             const response = await fetch(url);
             const resJson = await response.json();
             setCity(resJson.main);
         };
         fetchApi();
-    }, [search]);
+    }
+
+    const handleChange = (event) => {
+        let input = event.target.value;
+        setSearch(event.target.value);
+        inputRef.current(input);
+    }
 
     return (
         <Fragment>
@@ -23,9 +37,7 @@ const TempApp = () => {
                     <input type="search"
                         className="inputField"
                         value={search}
-                        onChange={(event) => {
-                            setSearch(event.target.value);
-                        }} />
+                        onChange={(event) => handleChange(event)} />
                 </div>
                 {!city ? (
                     <p className="errorMsg"> No Data Found</p>
